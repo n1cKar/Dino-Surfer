@@ -30,6 +30,14 @@ The gameplay combines the lane-switching mechanics inspired by *Subway Surfers* 
 
 ---
 
+## Images
+
+![1](./app_pics/1.png)
+![2](./app_pics/2.png)
+![3](./app_pics/3.jpg)
+![4](./app_pics/4.jpg)
+![5](./app_pics/5.jpg)
+
 ## Getting Started
 
 1. Clone the repo:
