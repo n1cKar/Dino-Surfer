@@ -6,7 +6,7 @@ import * as THREE from 'three';
 
 interface Player3D {
   lane: number
-  mesh: THREE.Mesh
+  mesh: THREE.Object3D
   vy: number
   onGround: boolean
   isSliding: boolean
@@ -14,7 +14,7 @@ interface Player3D {
 
 interface Obstacle3D {
   lane: number
-  mesh: THREE.Mesh
+  mesh: THREE.Mesh | THREE.Group
   speed: number
 }
 
@@ -58,7 +58,7 @@ export default function GameCanvas3D() {
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null)
   const playerRef = useRef<Player3D | null>(null)
   const obstaclesRef = useRef<Obstacle3D[]>([])
-  const reusableObstaclePool = useRef<Pool<THREE.Mesh>>([])
+  const reusableObstaclePool = useRef<Pool<THREE.Mesh | THREE.Group>>([])
   const lastSpawnRef = useRef(0)
   const spawnIntervalRef = useRef(0.9)
   const forwardSpeedRef = useRef(BASE_FORWARD_SPEED)
@@ -223,10 +223,13 @@ export default function GameCanvas3D() {
       const m = new THREE.Mesh(geo, mat)
       return m
     } */
-    function makeObstacleMesh() {
+    function makeObstacleMesh(): THREE.Mesh | THREE.Group {
       const type = Math.floor(Math.random() * 5); // 5 shape types
-      let mesh;
-
+      let mesh: THREE.Mesh | THREE.Group = new THREE.Mesh(
+        new THREE.BoxGeometry(1, 1, 1),
+        new THREE.MeshBasicMaterial({ color: 0x000000 })
+      );
+    
       switch (type) {
         case 0: // Box
           mesh = new THREE.Mesh(
@@ -234,21 +237,21 @@ export default function GameCanvas3D() {
             new THREE.MeshBasicMaterial({ color: 0x000000 })
           );
           break;
-
+    
         case 1: // Cylinder (pillar)
           mesh = new THREE.Mesh(
             new THREE.CylinderGeometry(0.5, 0.5, 2 + Math.random() * 2, 16),
             new THREE.MeshBasicMaterial({ color: 0x000000 })
           );
           break;
-
+    
         case 2: // Flat plank
           mesh = new THREE.Mesh(
             new THREE.BoxGeometry(3, 0.3, 1),
             new THREE.MeshBasicMaterial({ color: 0x000000 })
           );
           break;
-
+    
         case 3: // H-shape
           const hGroup = new THREE.Group();
           const matH = new THREE.MeshBasicMaterial({ color: 0x000000 });
@@ -263,7 +266,7 @@ export default function GameCanvas3D() {
           hGroup.add(leg1, leg2, bar);
           mesh = hGroup;
           break;
-
+    
         case 4: // Arch
           const archGroup = new THREE.Group();
           const matArch = new THREE.MeshBasicMaterial({ color: 0x000000 });
@@ -281,7 +284,7 @@ export default function GameCanvas3D() {
           mesh = archGroup;
           break;
       }
-
+    
       return mesh;
     }
 
@@ -330,15 +333,17 @@ export default function GameCanvas3D() {
     function spawnObstacle() {
       const lane = Math.floor(Math.random() * LANES)
       const mesh = reusableObstaclePool.current.pop() || makeObstacleMesh()
-      mesh.scale.set(1, 1, 1)
-      mesh.position.set(laneX(lane), 0.5 + Math.random() * 0.4, SPAWN_Z - Math.random() * 10)
-      mesh.visible = true
-      scene.add(mesh)
-      obstaclesRef.current.push({
-        lane,
-        mesh,
-        speed: forwardSpeedRef.current + (Math.random() * 2)
-      })
+      if (mesh) {
+        mesh.scale.set(1, 1, 1)
+        mesh.position.set(laneX(lane), 0.5 + Math.random() * 0.4, SPAWN_Z - Math.random() * 10)
+        mesh.visible = true
+        scene.add(mesh)
+        obstaclesRef.current.push({
+          lane,
+          mesh,
+          speed: forwardSpeedRef.current + (Math.random() * 2)
+        })
+      }
     }
 
     // animation loop
