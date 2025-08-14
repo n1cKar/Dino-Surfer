@@ -61,7 +61,9 @@ export default function MobileControls() {
         if (deltaY < 0) {
           // Swipe up
           pjump()
-        } 
+        } else {
+          pslide() // Swipe down can be used for slide or other action
+        }
         // You can add swipe down if needed for slide
       }
     }
